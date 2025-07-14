@@ -8,8 +8,9 @@ body {
   font-family: 'Nunito', sans-serif;
 }
 .glass {
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.87);
   backdrop-filter: blur(10px);
-  border-radius: 2rem;
-  box-shadow: 0 2px 24px 0 #8884d833;
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 18px 0 #a259f71a;
+  border: 1.5px solid #ede3fa;
 }
