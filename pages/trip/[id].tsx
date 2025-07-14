@@ -1,5 +1,4 @@
 "use client";
-export const dynamic = "force-dynamic";
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -48,13 +47,30 @@ export default function TripDetailPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
 
   async function fetchAll() {
     setLoading(true);
-    const { data: trip } = await supabase.from('trips').select('*').eq('id', tripId).single();
-    const { data: members } = await supabase.from('members').select('*').eq('trip_id', tripId);
-    const { data: expenses } = await supabase.from('expenses').select('*').eq('trip_id', tripId).order('created_at', { ascending: false });
+    setError(null);
+    // Přidej error handling pro každé volání
+    const { data: trip, error: tripError } = await supabase.from('trips').select('*').eq('id', tripId).single();
+    const { data: members, error: membersError } = await supabase.from('members').select('*').eq('trip_id', tripId);
+    const { data: expenses, error: expensesError } = await supabase.from('expenses').select('*').eq('trip_id', tripId).order('created_at', { ascending: false });
+
+    if (tripError) {
+      setError("Nepodařilo se načíst výlet. " + tripError.message);
+      console.error('Trip error:', tripError);
+    }
+    if (membersError) {
+      setError("Nepodařilo se načíst členy. " + membersError.message);
+      console.error('Members error:', membersError);
+    }
+    if (expensesError) {
+      setError("Nepodařilo se načíst výdaje. " + expensesError.message);
+      console.error('Expenses error:', expensesError);
+    }
+
     setTrip(trip);
     setMembers(members || []);
     setExpenses(expenses || []);
@@ -65,6 +81,13 @@ export default function TripDetailPage() {
     fetchAll();
     // eslint-disable-next-line
   }, [tripId]);
+
+  // Debug výpis do konzole (na začátku mountu stránky)
+  useEffect(() => {
+    supabase.from('trips').select('*').limit(1).then(res => {
+      console.log('Test Supabase connection:', res);
+    });
+  }, []);
 
   async function addExpense(form: any) {
     await supabase.from('expenses').insert({
@@ -84,6 +107,7 @@ export default function TripDetailPage() {
   }
 
   if (loading) return <div className="p-8 text-xl">Načítám...</div>;
+  if (error) return <div className="p-8 text-xl text-red-600">Chyba: {error}</div>;
   if (!trip) return <div className="p-8 text-xl">Výlet nenalezen.</div>;
 
   const settlements = computeSettlements(expenses, members);
@@ -111,6 +135,7 @@ export default function TripDetailPage() {
 
       <SummaryCharts expenses={expenses} members={members} />
 
+      {/* Filtr podle osob */}
       <div className="flex gap-2 justify-center mb-4">
         <button
           onClick={() => setSelectedMember(null)}
