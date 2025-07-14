@@ -1,51 +1,45 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
+// components/SummaryCharts.tsx
+"use client";
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { motion } from "framer-motion";
 
-const COLORS = ["#7f5af0", "#2cb67d", "#ef4565", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#ff595e", "#b2bec3", "#e17055"];
+const COLORS = [
+  "#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#a259f7", "#f76a6a", "#ff7eb9", "#43e97b", "#38f9d7", "#ffd700",
+];
 
-export default function SummaryCharts({ expenses, members }: any) {
-  if (!expenses.length) return null;
-
-  // Suma podle člena (kdo kolik zaplatil)
-  const byPayer = members.map((m: any, i: number) => ({
+export default function SummaryCharts({ expenses, members }: { expenses: any[]; members: any[] }) {
+  // Celkové výdaje podle člena
+  const data = members.map((m, idx) => ({
     name: m.name,
-    value: expenses.filter((e: any) => e.paid_by === m.id).reduce((acc: number, e: any) => acc + Number(e.amount), 0),
-    color: COLORS[i % COLORS.length]
+    value: expenses.filter(e => e.paid_by === m.id).reduce((acc, e) => acc + Number(e.amount), 0),
+    fill: COLORS[idx % COLORS.length],
   }));
 
+  if (data.every(d => d.value === 0)) {
+    return <div className="text-center text-gray-500 py-4">Zatím žádné výdaje</div>;
+  }
+
   return (
-    <div className="flex flex-col md:flex-row gap-6 items-center justify-center py-6">
-      <div className="bg-white/70 rounded-2xl p-4 shadow-lg flex flex-col items-center">
-        <h3 className="font-bold mb-2">Podíl zaplacených výdajů</h3>
-        <div className="w-56 h-56">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={byPayer} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}>
-                {byPayer.map((entry, idx) => (
-                  <Cell key={`cell-${idx}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-      <div className="bg-white/70 rounded-2xl p-4 shadow-lg flex flex-col items-center">
-        <h3 className="font-bold mb-2">Výdaje podle osoby</h3>
-        <div className="w-64 h-56">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={byPayer}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value">
-                {byPayer.map((entry, idx) => (
-                  <Cell key={`bar-${idx}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
+    <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="my-8">
+      <h2 className="font-bold text-lg text-center mb-2">Podíl výdajů podle osob</h2>
+      <ResponsiveContainer width="100%" height={260}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            outerRadius={100}
+            label={({ name, percent }) => `${name} (${Math.round(percent * 100)}%)`}
+            isAnimationActive
+          >
+            {data.map((entry, idx) => (
+              <Cell key={`cell-${idx}`} fill={entry.fill} />
+            ))}
+          </Pie>
+          <Tooltip formatter={(v: number) => `${v.toFixed(2)} Kč`} />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+    </motion.div>
   );
 }
