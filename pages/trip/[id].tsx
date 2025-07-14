@@ -140,7 +140,9 @@ export default function TripDetailPage() {
     </motion.div>
   );
 }
-// Pro Next.js 13/14 v pages/
+
+// ⬇️ Přidej tento blok úplně na konec, to je celý trik pro build na Vercelu!
+
 export async function getStaticPaths() {
   return {
     paths: [],
