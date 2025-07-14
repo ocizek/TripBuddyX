@@ -140,18 +140,3 @@ export default function TripDetailPage() {
     </motion.div>
   );
 }
-
-// ⬇️ Přidej tento blok úplně na konec, to je celý trik pro build na Vercelu!
-
-export async function getStaticPaths() {
-  return {
-    paths: [],
-    fallback: true
-  };
-}
-
-export async function getStaticProps() {
-  return {
-    props: {}
-  };
-}
