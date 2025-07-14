@@ -6,8 +6,8 @@ import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseList from '@/components/ExpenseList';
 import SettlementView from '@/components/SettlementView';
 import SummaryCharts from '@/components/SummaryCharts';
+import { motion } from "framer-motion";
 
-// Výpočet vypořádání
 function computeSettlements(expenses: any[], members: any[]) {
   const totals: Record<string, number> = {};
   members.forEach(m => { totals[m.id] = 0; });
@@ -42,15 +42,14 @@ function computeSettlements(expenses: any[], members: any[]) {
 export default function TripDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const tripId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : null;
-
+  const tripId = Array.isArray(params.id) ? params.id[0] : params.id;
   const [trip, setTrip] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<string | null>(null);
 
   async function fetchAll() {
-    if (!tripId) return;
     setLoading(true);
     const { data: trip } = await supabase.from('trips').select('*').eq('id', tripId).single();
     const { data: members } = await supabase.from('members').select('*').eq('trip_id', tripId);
@@ -62,12 +61,11 @@ export default function TripDetailPage() {
   }
 
   useEffect(() => {
-    if (tripId) fetchAll();
+    fetchAll();
     // eslint-disable-next-line
   }, [tripId]);
 
   async function addExpense(form: any) {
-    if (!tripId) return;
     await supabase.from('expenses').insert({
       trip_id: tripId,
       description: form.description,
@@ -84,23 +82,60 @@ export default function TripDetailPage() {
     fetchAll();
   }
 
-  if (!tripId) return <div className="p-8 text-xl">Chybné nebo nedefinované ID výletu.</div>;
   if (loading) return <div className="p-8 text-xl">Načítám...</div>;
   if (!trip) return <div className="p-8 text-xl">Výlet nenalezen.</div>;
 
   const settlements = computeSettlements(expenses, members);
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-2">
-      <h1 className="text-3xl font-bold text-center mb-2">{trip.name}</h1>
-      <div className="text-center mb-4">Účastníci: {members.map(m => m.name).join(", ")}</div>
-      <ExpenseForm members={members} onSubmit={addExpense} />
-      <ExpenseList expenses={expenses} members={members} onDelete={deleteExpense} />
+    <motion.div
+      className="max-w-2xl mx-auto py-8 px-2"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", duration: 0.7 }}
+    >
+      <div className="glass mb-6 p-4">
+        <h1 className="text-3xl font-bold text-center mb-2">{trip.name} <span className="text-2xl">🗺️</span></h1>
+        <div className="text-center mb-1 text-gray-600">Účastníci: {members.map(m => m.name).join(", ")}</div>
+        <div className="text-center mb-2">
+          <span className="inline-block bg-green-100 text-green-700 rounded-xl px-2 py-1 font-mono text-xs">
+            Sdílet: {typeof window !== "undefined" ? window.location.href : ""}
+          </span>
+        </div>
+      </div>
+
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+        <ExpenseForm members={members} onSubmit={addExpense} />
+      </motion.div>
+
       <SummaryCharts expenses={expenses} members={members} />
+
+      {/* Filtr podle osob */}
+      <div className="flex gap-2 justify-center mb-4">
+        <button
+          onClick={() => setSelectedMember(null)}
+          className={`rounded-xl px-3 py-1 font-bold transition-all ${!selectedMember ? 'bg-purple-500 text-white shadow' : 'bg-gray-200'}`}
+        >
+          Všichni
+        </button>
+        {members.map(m => (
+          <button
+            key={m.id}
+            onClick={() => setSelectedMember(m.id)}
+            className={`rounded-xl px-3 py-1 transition-all ${selectedMember === m.id ? 'bg-purple-500 text-white shadow' : 'bg-gray-200 hover:bg-purple-200'}`}
+          >
+            {m.name}
+          </button>
+        ))}
+      </div>
+
+      <ExpenseList
+        expenses={selectedMember ? expenses.filter(e => e.paid_by === selectedMember) : expenses}
+        members={members}
+        onDelete={deleteExpense}
+      />
+
       <SettlementView settlements={settlements} />
-    </div>
+    </motion.div>
   );
 }
-
-// Přidej tento export na konec – tím **zakážeš SSG** a stránka se bude vždy generovat dynamicky:
-export const dynamic = "force-dynamic";
