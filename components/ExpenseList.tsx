@@ -28,3 +28,16 @@ export default function ExpenseList({ expenses, members, onEdit, onDelete }: any
     </div>
   );
 }
+import { motion } from "framer-motion";
+// ...zbytek...
+{expenses.map((expense, i) => (
+  <motion.li
+    key={expense.id}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: i * 0.05 }}
+    // ...styling...
+  >
+    {/* ...obsah výdaje... */}
+  </motion.li>
+))}
