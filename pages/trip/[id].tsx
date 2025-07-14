@@ -7,6 +7,7 @@ import ExpenseList from '@/components/ExpenseList';
 import SettlementView from '@/components/SettlementView';
 import SummaryCharts from '@/components/SummaryCharts';
 
+// Výpočet vypořádání
 function computeSettlements(expenses: any[], members: any[]) {
   const totals: Record<string, number> = {};
   members.forEach(m => { totals[m.id] = 0; });
@@ -41,7 +42,6 @@ function computeSettlements(expenses: any[], members: any[]) {
 export default function TripDetailPage() {
   const params = useParams();
   const router = useRouter();
-  // Ochrana před chybějícím id:
   const tripId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : null;
 
   const [trip, setTrip] = useState<any>(null);
@@ -101,3 +101,6 @@ export default function TripDetailPage() {
     </div>
   );
 }
+
+// Přidej tento export na konec – tím **zakážeš SSG** a stránka se bude vždy generovat dynamicky:
+export const dynamic = "force-dynamic";
