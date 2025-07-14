@@ -111,7 +111,6 @@ export default function TripDetailPage() {
 
       <SummaryCharts expenses={expenses} members={members} />
 
-      {/* Filtr podle osob */}
       <div className="flex gap-2 justify-center mb-4">
         <button
           onClick={() => setSelectedMember(null)}
@@ -139,18 +138,4 @@ export default function TripDetailPage() {
       <SettlementView settlements={settlements} />
     </motion.div>
   );
-}
-
-// ⬇️ DŮLEŽITÉ! Přidej na úplný konec souboru!
-export async function getStaticPaths() {
-  return {
-    paths: [],
-    fallback: "blocking", // všechny stránky řeš dynamicky
-  };
-}
-
-export async function getStaticProps() {
-  return {
-    props: {},
-  };
 }
