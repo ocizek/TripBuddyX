@@ -41,13 +41,16 @@ function computeSettlements(expenses: any[], members: any[]) {
 export default function TripDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const tripId = Array.isArray(params.id) ? params.id[0] : params.id;
+  // Ochrana před chybějícím id:
+  const tripId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : null;
+
   const [trip, setTrip] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function fetchAll() {
+    if (!tripId) return;
     setLoading(true);
     const { data: trip } = await supabase.from('trips').select('*').eq('id', tripId).single();
     const { data: members } = await supabase.from('members').select('*').eq('trip_id', tripId);
@@ -59,11 +62,12 @@ export default function TripDetailPage() {
   }
 
   useEffect(() => {
-    fetchAll();
+    if (tripId) fetchAll();
     // eslint-disable-next-line
   }, [tripId]);
 
   async function addExpense(form: any) {
+    if (!tripId) return;
     await supabase.from('expenses').insert({
       trip_id: tripId,
       description: form.description,
@@ -80,6 +84,7 @@ export default function TripDetailPage() {
     fetchAll();
   }
 
+  if (!tripId) return <div className="p-8 text-xl">Chybné nebo nedefinované ID výletu.</div>;
   if (loading) return <div className="p-8 text-xl">Načítám...</div>;
   if (!trip) return <div className="p-8 text-xl">Výlet nenalezen.</div>;
 
